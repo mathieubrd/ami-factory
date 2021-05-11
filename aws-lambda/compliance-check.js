@@ -25,7 +25,7 @@ const runInstance = async () => {
 
 const runSsmShellScript = async (instanceId, commands) => {
   console.debug(`runSsmShellScript ${commands}`)
-  
+
   const result = await SSM.sendCommand({
     DocumentName: 'AWS-RunShellScript',
     InstanceIds: [ instanceId ],
@@ -36,6 +36,18 @@ const runSsmShellScript = async (instanceId, commands) => {
   }).promise()
 
   return await waitForCommandCompleted(result.Command.CommandId, instanceId)
+}
+
+const installTools = async (instanceId) => {
+  console.debug(`Installing tools on ${instanceId}`)
+
+  return runSsmShellScript(instanceId,
+    [
+      "yum install -y openscap-scanner unzip",
+      "curl \"https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip\" -o awscliv2.zip",
+      "unzip awscliv2.zip",
+      "./aws/install"
+    ])
 }
 
 const terminateInstance = async (instanceId) => {
@@ -89,9 +101,9 @@ const waitForCommandCompleted = async (commandId, instanceId) => {
         const status = result.Status
   
         if (status === 'Success') {
-          return resolve(result.StatusDetails)
+          return resolve()
         } else if (status === 'Failed' || status === 'TimedOut') {
-            return reject(result.StatusDetails)
+            return reject({ message: `SSM command ${commandId} failed: ${result.StatusDetails}`})
         }
         
         setTimeout(polling, 5000);
@@ -150,6 +162,7 @@ exports.handler = async (event) => {
     }).promise()
 
     await waitForSsmAgentRunning(instanceId)
+    await installTools(instanceId)
     await copyArtifactFromS3ToInstance(instanceId, artifact.bucketName, artifact.objectKey, artifact.artifactName)
     await complianceChecks(instanceId, reportFilename, remediationReportFilename, "ssg-rhel8-ds.xml")
     await copyReportToBucket(instanceId, reportFilename, remediationReportFilename, artifact.bucketName)
@@ -162,11 +175,10 @@ exports.handler = async (event) => {
     if (instanceId) {
       await terminateInstance(instanceId)
     }
-    
     await CodePipeline.putJobFailureResult({
       jobId: codePipelineJobId,
       failureDetails: {
-        message: err,
+        message: err.message,
         type: 'JobFailed'
       }
     }).promise()

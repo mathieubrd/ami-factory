@@ -24,8 +24,13 @@ aws cloudformation package --template-file template.yaml --s3-bucket <s3-bucket>
 
 Then, deploy the stack:
 ```
-aws cloudformation deploy --template-file packaged-template.yaml --stack-name <stack-name> --parameter-overrides CodeCommitRepositoryName=<codecommit-repo> BucketName=<bucket-name> PreparedRhel8ImageId=<prepared-ami-id> --capabilities CAPABILITY_IAM
+aws cloudformation deploy --template-file packaged-template.yaml --stack-name <stack-name> --parameter-overrides CodeCommitRepositoryName=<codecommit-repo> BucketName=<bucket-name> AmiId=<ami-id> --capabilities CAPABILITY_IAM
 ```
+
+### Stack parameters
+- `CodeCommitRepositoryName` - The name of the CodeCommitRepository that holds the SCAP content.
+- `BucketName` - The bucket name in which the reports will be uploaded.
+- `AmiId` - The ID of the AMI that will be used as base (must be a RHEL-based AMI).
 
 ## Compliance rules and remediation
 Compliance rules are written using SCAP (Security Content Automation Protocol):  

@@ -5,9 +5,9 @@ Parameters:
   CodeCommitRepositoryName:
     Type: String
     Description: The CodeCommit repository name containing the SCAP project.
-  PreparedRhel8ImageId:
+  AmiId:
     Type: String
-    Description: The prepared RHEL8 Image ID used to perform SCAP compliance checks.
+    Description: The AMI ID on which the compliance checks will run on (must be a RHEL-based AMI).
   
 Resources:
   LambdaStack:
@@ -23,7 +23,7 @@ Resources:
       TemplateURL: ./cloudformation/launch-template.yaml
       Parameters:
         BucketName: !Ref BucketName
-        PreparedRhel8ImageId: !Ref PreparedRhel8ImageId
+        AmiId: !Ref AmiId
 
   CodeBuildStack:
     Type: AWS::CloudFormation::Stack

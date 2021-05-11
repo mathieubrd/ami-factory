@@ -1,7 +1,7 @@
 Parameters:
   BucketName:
     Type: String
-  PreparedRhel8ImageId:
+  AmiId:
     Type: String
 
 Resources:
@@ -47,7 +47,7 @@ Resources:
         IamInstanceProfile:
           Arn:
             Fn::GetAtt: [InstanceProfile, Arn]
-        ImageId: !Ref PreparedRhel8ImageId
+        ImageId: !Ref AmiId
         InstanceType: t3.medium
         UserData: |
           IyEvYmluL2Jhc2gNCnl1bSBpbnN0YWxsIC15IGh0dHBzOi8vczMuYW1hem9uYXdzLmNvbS9lYzItZG93bmxvYWRzLXdpbmRvd3MvU1NNQWdlbnQvbGF0ZXN0L2xpbnV4X2FtZDY0L2FtYXpvbi1zc20tYWdlbnQucnBtDQpzeXN0ZW1jdGwgc3RhcnQgYW1hem9uLXNzbS1hZ2VudA==
