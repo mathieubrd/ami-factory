@@ -1,0 +1,30 @@
+documentation_complete: true
+
+prodtype: ocp4,ol7,ol8,rhel7,rhel8
+
+title: 'Install firewalld Package'
+
+description: |-
+    {{{ describe_package_install(package="firewalld") }}}
+
+rationale: 'The firewalld package should be installed to provide access control methods.'
+
+severity: medium
+
+identifiers:
+    cce@rhel7: 82999-4
+    cce@rhel8: 82998-6
+    cce@ocp4: 82521-6
+
+references:
+    nist: CM-6(a)
+    srg: SRG-OS-000480-GPOS-00227,SRG-OS-000298-GPOS-00116
+
+ocil_clause: 'the package is not installed'
+
+ocil: '{{{ ocil_package(package="firewalld") }}}'
+
+template:
+    name: package_installed
+    vars:
+        pkgname: firewalld

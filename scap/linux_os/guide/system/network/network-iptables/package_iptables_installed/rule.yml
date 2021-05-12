@@ -1,0 +1,34 @@
+documentation_complete: true
+
+prodtype: fedora,ocp4,ol7,ol8,rhel6,rhel7,rhel8,rhv4
+
+title: 'Install iptables Package'
+
+description: |-
+    {{{ describe_package_install(package="iptables") }}}
+
+rationale: |-
+    <tt>iptables</tt> controls the Linux kernel network packet filtering
+    code. <tt>iptables</tt> allows system operators to set up firewalls and IP
+    masquerading, etc.
+
+severity: medium
+
+identifiers:
+    cce@rhel6: 82984-6
+    cce@rhel7: 82983-8
+    cce@rhel8: 82982-0
+    cce@ocp4: 82522-4
+
+references:
+    nist: CM-6(a)
+    srg: SRG-OS-000480-GPOS-00227
+
+ocil_clause: 'the package is not installed'
+
+ocil: '{{{ ocil_package(package="iptables") }}}'
+
+template:
+    name: package_installed
+    vars:
+        pkgname: iptables
