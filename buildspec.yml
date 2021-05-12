@@ -1,0 +1,27 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: latest
+    commands:
+      - yum install -y cmake make openscap-utils PyYAML python-jinja2
+  pre_build:
+    commands:
+      - cd scap/
+      - mkdir build
+      - cd build/ && cmake ../
+  build:
+    commands:
+      - make -j4 rhel8
+ 
+artifacts:
+  files:
+    - scap/build/*-ds.xml
+  discard-paths: yes
+  secondary-artifacts:
+    guides:
+      files:
+        - scap/build/guides/*.html
+      name: guides
+      discard-paths: yes
