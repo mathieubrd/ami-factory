@@ -1,0 +1,66 @@
+{
+    "Parameters": {
+        "BucketName": {
+            "Type": "String",
+            "Description": "The bucket's name which will contain all the project's files."
+        },
+
+        "CodeCommitRepositoryName": {
+            "Type": "String",
+            "Description": "The CodeCommit repository name containing the SCAP project."
+        },
+
+        "PreparedRhel8ImageId": {
+            "Type": "String",
+            "Description": "The prepared RHEL8 Image ID used to perform SCAP compliance checks."
+        }
+    },
+
+    "Resources": {
+        "LambdaStack": {
+            "Type": "AWS::CloudFormation::Stack",
+            "Properties": {
+                "TemplateURL": "./lambda.template",
+                "Parameters": {
+                    "BucketName": { "Ref": "BucketName" }
+                }
+            }
+        },
+
+        "LaunchTemplateStack": {
+            "Type": "AWS::CloudFormation::Stack",
+            "Properties": {
+                "TemplateURL": "./launch-template.template",
+                "Parameters": {
+                    "BucketName": { "Ref": "BucketName" } ,
+                    "PreparedRhel8ImageId": { "Ref": "PreparedRhel8ImageId" }
+                }
+            }
+        },
+
+        "CodeBuildStack": {
+            "Type": "AWS::CloudFormation::Stack",
+            "Properties": {
+                "TemplateURL": "./codebuild.template",
+                "Parameters": {
+                    "BucketName": { "Ref": "BucketName" }
+                }
+            }
+        },
+
+        "CodePipelineStack": {
+            "Type": "AWS::CloudFormation::Stack",
+            "Properties": {
+                "TemplateURL": "./codepipeline.template",
+                "Parameters": {
+                    "BucketName": { "Ref": "BucketName" },
+                    "CodeBuildProjectArn": { "Fn::GetAtt": ["CodeBuildStack", "Outputs.CodeBuildProjectArn"] },
+                    "CodeBuildProjectName": { "Fn::GetAtt": ["CodeBuildStack", "Outputs.CodeBuildProjectName"] },
+                    "LambdaArn": { "Fn::GetAtt": ["LambdaStack", "Outputs.LambdaArn"] },
+                    "LambdaName": { "Fn::GetAtt": ["LambdaStack", "Outputs.LambdaName"] },
+                    "CodeCommitRepositoryName": { "Ref": "CodeCommitRepositoryName" }
+                }
+            }
+        }
+    }
+}

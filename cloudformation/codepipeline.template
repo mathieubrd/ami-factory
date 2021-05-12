@@ -1,0 +1,210 @@
+{
+    "Parameters": {
+        "BucketName": {
+            "Type": "String"
+        },
+
+        "CodeBuildProjectArn": {
+            "Type": "String"
+        },
+
+        "CodeBuildProjectName": {
+            "Type": "String"
+        },
+
+        "LambdaArn": {
+            "Type": "String"
+        },
+
+        "LambdaName": {
+            "Type": "String"
+        },
+
+        "CodeCommitRepositoryName": {
+            "Type": "String"
+        }
+    },
+
+    "Resources": {
+        "Role": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "codepipeline.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "CodeCommit",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "codecommit:GetCommit",
+                                        "codecommit:GetBranch",
+                                        "codecommit:UploadArchive",
+                                        "codecommit:GetUploadArchiveStatus"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "PolicyName": "S3",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:PutObject"
+                                    ],
+                                    "Resource": {
+                                        "Fn::Sub": [ "arn:aws:s3:::${Bucket}/*", { "Bucket": { "Ref": "BucketName" }} ]
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "PolicyName": "CodeBuild",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "codebuild:StartBuild",
+                                        "codebuild:BatchGetBuilds"
+                                    ],
+                                    "Resource": { "Ref": "CodeBuildProjectArn" }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "PolicyName": "Lambda",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "lambda:InvokeFunction"
+                                    ],
+                                    "Resource": { "Ref": "LambdaArn" }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+
+        "CodePipeline": {
+            "Type": "AWS::CodePipeline::Pipeline",
+            "Properties": {
+                "ArtifactStore": {
+                    "Type": "S3",
+                    "Location": { "Ref": "BucketName" }
+                },
+                "RestartExecutionOnUpdate": false,
+                "RoleArn": { "Fn::GetAtt": ["Role", "Arn"] },
+                "Stages": [
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Source",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeCommit",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "RepositoryName": { "Ref": "CodeCommitRepositoryName" },
+                                    "BranchName": "master"
+                                },
+                                "OutputArtifacts": [
+                                    { "Name": "Source" }
+                                ],
+                                "Name": "CodeCommit"
+                            }
+                        ],
+                        "Name": "Source"
+                    },
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Build",
+                                    "Owner": "AWS",
+                                    "Provider": "CodeBuild",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "ProjectName": { "Ref": "CodeBuildProjectName" }
+                                },
+                                "InputArtifacts": [
+                                    { "Name": "Source" }
+                                ],
+                                "OutputArtifacts": [
+                                    { "Name": "Build" }
+                                ],
+                                "Name": "CodeBuild"
+                            }
+                        ],
+                        "Name": "Build"
+                    },
+                    {
+                        "Actions": [
+                            {
+                                "ActionTypeId": {
+                                    "Category": "Invoke",
+                                    "Owner": "AWS",
+                                    "Provider": "Lambda",
+                                    "Version": "1"
+                                },
+                                "Configuration": {
+                                    "FunctionName": { "Ref": "LambdaName" }
+                                },
+                                "InputArtifacts": [
+                                    { "Name": "Build" }
+                                ],
+                                "OutputArtifacts": [
+                                    { "Name": "Report" }
+                                ],
+                                "Name": "Lambda"
+                            }
+                        ],
+                        "Name": "Compliance"
+                    }
+                ] 
+            }
+        }
+    },
+
+    "Outputs": {
+        "RoleArn": {
+            "Value": { "Fn::GetAtt": [ "Role", "Arn" ] }
+        },
+
+        "CodePipelineProjectName": {
+            "Value": { "Ref": "CodePipeline" }
+        }
+    }
+}

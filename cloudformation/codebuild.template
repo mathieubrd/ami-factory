@@ -1,0 +1,113 @@
+{
+    "Parameters": {
+        "BucketName": {
+            "Type": "String"
+        }
+    },
+
+    "Resources": {
+        "Role": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "codebuild.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "CloudWatch",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "logs:CreateLogGroup",
+                                        "logs:CreateLogStream",
+                                        "logs:PutLogEvents"
+                                    ],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "PolicyName": "S3",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:GetObject",
+                                        "s3:PutObject"
+                                    ],
+                                    "Resource": {
+                                        "Fn::Sub": [ "arn:aws:s3:::${Bucket}/*", { "Bucket": { "Ref": "BucketName" }} ]
+                                    }
+                                }
+                            ]
+                        }     
+                    }
+                ]
+            }
+        },
+
+        "CodeBuild": {
+            "Type": "AWS::CodeBuild::Project",
+            "Properties": {
+                "Artifacts": {
+                    "Type": "CODEPIPELINE"
+                },
+                "SecondaryArtifacts": [
+                    {
+                        "ArtifactIdentifier": "guides",
+                        "Type": "S3",
+                        "Location": { "Ref": "BucketName" },
+                        "Packaging": "NONE"
+                    }
+                ],
+                "Environment": {
+                    "ComputeType": "BUILD_GENERAL1_MEDIUM",
+                    "Image": "aws/codebuild/amazonlinux2-x86_64-standard:3.0",
+                    "Type": "LINUX_CONTAINER"
+                },
+                "Cache": {
+                    "Type": "LOCAL",
+                    "Modes": [ "LOCAL_SOURCE_CACHE" ]
+                },
+                "LogsConfig": {
+                    "CloudWatchLogs": { "Status": "ENABLED" }
+                },
+                "ServiceRole": { "Fn::GetAtt": ["Role", "Arn"] },
+                "Source": { "Type": "CODEPIPELINE" }
+            }
+        }
+    },
+
+    "Outputs": {
+        "RoleArn": {
+            "Value": { "Fn::GetAtt": [ "Role", "Arn" ] }
+        },
+
+        "CodeBuildProjectArn": {
+            "Value": { "Fn::GetAtt": [ "CodeBuild", "Arn" ] }
+        },
+
+        "CodeBuildProjectName": {
+            "Value": { "Ref": "CodeBuild" }
+        }
+    }
+}
