@@ -26,6 +26,7 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: '*'
+
         - PolicyName: S3
           PolicyDocument:
             Version: '2012-10-17'

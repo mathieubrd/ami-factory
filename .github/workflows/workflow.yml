@@ -1,0 +1,40 @@
+name: Deploy CloudFormation stack
+on:
+  push:
+    branches:
+      - master
+
+defaults:
+  run:
+    shell: bash
+    working-directory: .
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch
+
+      - name: Package templates
+        run: |
+          aws cloudformation package --template-file template.yaml --s3-bucket mathieubrochard.cloudformation --output-template-file packaged-template.yaml
+
+      - name: Deploy stack
+        uses: aws-actions/aws-cloudformation-github-deploy@v1
+        with:
+          name: ami-factory
+          template: packaged-template.yaml
+          parameter-overrides: "GitHubRepository=capgemini-pnc/ami-factory,BranchName=${{ steps.extract_branch.outputs.branch }},BucketName=mathieubrochard.ami-factory,AmiId=ami-032e5b6af8a711f30"
+          capabilities: CAPABILITY_NAMED_IAM

@@ -2,12 +2,16 @@ Parameters:
   BucketName:
     Type: String
     Description: The bucket's name which will contain all the project's files.
-  CodeCommitRepositoryName:
-    Type: String
-    Description: The CodeCommit repository name containing the SCAP project.
   AmiId:
     Type: String
     Description: The AMI ID on which the compliance checks will run on (must be a RHEL-based AMI).
+  GitHubRepository:
+    Type: String
+    Description: |
+      The owner and name of the repository where source changes are to be detected.
+      Example: some-user/my-repo
+  BranchName:
+    Type: String
   
 Resources:
   LambdaStack:
@@ -16,14 +20,6 @@ Resources:
       TemplateURL: ./cloudformation/lambda.yaml
       Parameters:
         BucketName: !Ref BucketName
-
-  LaunchTemplateStack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: ./cloudformation/launch-template.yaml
-      Parameters:
-        BucketName: !Ref BucketName
-        AmiId: !Ref AmiId
 
   CodeBuildStack:
     Type: AWS::CloudFormation::Stack
@@ -46,4 +42,5 @@ Resources:
           Fn::GetAtt: [LambdaStack, Outputs.LambdaArn]
         LambdaName:
           Fn::GetAtt: [LambdaStack, Outputs.LambdaName]
-        CodeCommitRepositoryName: !Ref CodeCommitRepositoryName
+        GitHubRepository: !Ref GitHubRepository
+        BranchName: !Ref BranchName

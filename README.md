@@ -1,4 +1,4 @@
-# compliance-as-code
+# AMI Factory
 A pipeline that creates hardened AWS AMIs based on compliance rules and remediation scripts.  
 This project provides a pipeline that automatically:
 - Compiles a set of compliance rules and remediation scripts.

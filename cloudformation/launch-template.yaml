@@ -42,7 +42,7 @@ Resources:
   LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
     Properties:
-      LaunchTemplateName: complianceascode-rhel8
+      LaunchTemplateName: amifactory-rhel8
       LaunchTemplateData:
         IamInstanceProfile:
           Arn:

@@ -16,7 +16,7 @@ const runInstance = async () => {
       MinCount: 1,
       MaxCount: 1,
       LaunchTemplate: {
-        LaunchTemplateName: 'complianceascode-rhel8'
+        LaunchTemplateName: 'amifactory-rhel8'
       }
   }).promise()
     
