@@ -10,7 +10,6 @@ This project provides a pipeline that automatically:
 The pipeline is automatically deployed using CloudFormation.  
 It uses the following AWS services:
 - CloudFormation (deploys all the resources).
-- CodeCommit (hosts the set of compliance rules and remediation scripts).
 - CodeBuild (builds the set of compliance rules and remediation scripts).
 - CodePipeline (provides the automation pipeline).
 - Lambda (run EC2 instances, executes scripts, builds AMI, etc.).
@@ -24,11 +23,11 @@ aws cloudformation package --template-file template.yaml --s3-bucket <s3-bucket>
 
 Then, deploy the stack:
 ```
-aws cloudformation deploy --template-file packaged-template.yaml --stack-name <stack-name> --parameter-overrides CodeCommitRepositoryName=<codecommit-repo> BucketName=<bucket-name> AmiId=<ami-id> --capabilities CAPABILITY_IAM
+aws cloudformation deploy --template-file packaged-template.yaml --stack-name <stack-name> --parameter-overrides GitHubRepository=capgemini-pnc/ami-factory BucketName=capgemini-pnc.ami-factory AmiId=ami-032e5b6af8a711f30 --capabilities CAPABILITY_IAM
 ```
 
 ### Stack parameters
-- `CodeCommitRepositoryName` - The name of the CodeCommitRepository that holds the SCAP content.
+- `GitHubRepository` - The full name (includinf the organisation name) of the GitHub repository that contains the project.
 - `BucketName` - The bucket name in which the reports will be uploaded.
 - `AmiId` - The ID of the AMI that will be used as base (must be a RHEL-based AMI).
 
@@ -44,10 +43,6 @@ It provides a set of compliance rules for a variety of systems and a build pipel
 
 ## AWS Services
 
-### CodeCommit
-The CodeCommit repository holds the SCAP content.  
-It triggers the pipeline on every commit through CodePipeline.
-
 ### CodeBuild
 CodeBuild is responsible of building the SCAP content in a Docker container.  
 It retreives the SCAP content from the CodeCommit repository.  
@@ -57,9 +52,12 @@ It uploads the built packaged and the human-readable hardening guides to a S3 bu
 Defines the automation pipeline that is responsible of executing the compliance checks, remediation scripts, building the hardened AMI, etc.  
 It relies on AWS Lambda functions to provision EC2 instances, execute scripts, etc.
 
+### Lambda
+Once the SCAP content is built, CodePipeline triggers a Lambda that will build the hardened AMI.
+The Lambda runs an EC2 instance, executes the SCAP content, and build a new AMI.
+
 ## Limitations and improvements
 - Only support for RHEL8.
-- An AMI with the `oscap` package installed must be prepared before deploying the stack.
 - The hardening AMI is not actually created (working on it).
-- The Lambda function should be broken into multiple Lambdas.
+- The Lambda function could be replaced by HashiCorp Packer.
 - Based on a very old version of the SCAP Security Guide.
