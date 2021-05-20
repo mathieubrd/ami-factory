@@ -15,8 +15,8 @@ const runInstance = async () => {
   const result = await EC2.runInstances({
       MinCount: 1,
       MaxCount: 1,
-      LaunchTemplate: {
-        LaunchTemplateName: 'amifactory-rhel8'
+      IamInstanceProfile: {
+        Name: 'ami-factory'
       }
   }).promise()
     

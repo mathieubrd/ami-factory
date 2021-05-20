@@ -14,6 +14,41 @@ Parameters:
     Type: String
   
 Resources:
+  EC2Role:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: S3
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                  - 's3:PutObject'
+                Resource:
+                  Fn::Sub:
+                    - arn:aws:s3:::${Bucket}/*
+                    - Bucket: !Ref BucketName
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: ami-factory
+      Roles:
+        - !Ref EC2Role
+
   LambdaStack:
     Type: AWS::CloudFormation::Stack
     Properties:
