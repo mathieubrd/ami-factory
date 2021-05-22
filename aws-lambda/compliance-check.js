@@ -9,14 +9,14 @@ const sleep = async (ms) => {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-const runInstance = async () => {
-  console.debug('runInstance')
+const runInstance = async (instanceProfile) => {
+  console.debug(`runInstance ${instanceProfile}`)
 
   const result = await EC2.runInstances({
       MinCount: 1,
       MaxCount: 1,
       IamInstanceProfile: {
-        Name: 'ami-factory'
+        Name: instanceProfile
       }
   }).promise()
     
@@ -147,6 +147,7 @@ exports.handler = async (event) => {
   const reportFilename = 'compliance-report.html'
   const remediationReportFilename = 'remediation-report.html'
   const codePipelineJobId = event["CodePipeline.job"].id
+  const instanceProfile = event["CodePipeline.job"].data.actionConfiguration.configuration.UserParameters
 
   const artifact = {
     bucketName: event["CodePipeline.job"].data.inputArtifacts[0].location.s3Location.bucketName,
@@ -155,7 +156,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    instanceId = await runInstance()
+    instanceId = await runInstance(instanceProfile)
 
     await EC2.waitFor('instanceRunning', {
       InstanceIds: [ instanceId ]
