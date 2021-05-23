@@ -23,7 +23,7 @@ aws cloudformation package --template-file template.yaml --s3-bucket <s3-bucket>
 
 Then, deploy the stack:
 ```
-aws cloudformation deploy --template-file packaged-template.yaml --stack-name <stack-name> --parameter-overrides GitHubRepository=capgemini-pnc/ami-factory BucketName=capgemini-pnc.ami-factory AmiId=ami-032e5b6af8a711f30 --capabilities CAPABILITY_IAM
+aws cloudformation deploy --template-file packaged-template.yaml --stack-name <stack-name> --parameter-overrides GitHubRepository=capgemini-pnc/ami-factory BucketName=capgemini-pnc.ami-factory AmiId=ami-032e5b6af8a711f30 --capabilities CAPABILITY_NAMED_IAM
 ```
 
 ### Stack parameters
