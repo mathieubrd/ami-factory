@@ -10,9 +10,8 @@ This project provides a pipeline that automatically:
 The pipeline is automatically deployed using CloudFormation.  
 It uses the following AWS services:
 - CloudFormation (deploys all the resources).
-- CodeBuild (builds the set of compliance rules and remediation scripts).
+- CodeBuild (builds the set of compliance rules, remediation scripts, and build the hardened AMI using Packer).
 - CodePipeline (provides the automation pipeline).
-- Lambda (run EC2 instances, executes scripts, builds AMI, etc.).
 
 ## Deployment on AWS
 Before deploying the stack, a S3 bucket that will store the packaged template.
@@ -44,17 +43,15 @@ It provides a set of compliance rules for a variety of systems and a build pipel
 ## AWS Services
 
 ### CodeBuild
-CodeBuild is responsible of building the SCAP content in a Docker container.  
-It retreives the SCAP content from the CodeCommit repository.  
-It uploads the built packaged and the human-readable hardening guides to a S3 bucket.
+CodeBuild is responsible of building the SCAP content and the hardening AMI in a Docker container. 
+CodeBuild does the following steps:
+- Retreives the SCAP content from the CodeCommit repository.  
+- Uploads the built packaged and the human-readable hardening guides to a S3 bucket.
+- Launch Packer that builds the hardening AMI by using the previous built SCAP package.
 
 ### CodePipeline
 Defines the automation pipeline that is responsible of executing the compliance checks, remediation scripts, building the hardened AMI, etc.  
 It relies on AWS Lambda functions to provision EC2 instances, execute scripts, etc.
-
-### Lambda
-Once the SCAP content is built, CodePipeline triggers a Lambda that will build the hardened AMI.
-The Lambda runs an EC2 instance, executes the SCAP content, and build a new AMI.
 
 ## Limitations and improvements
 - Only support for RHEL8.

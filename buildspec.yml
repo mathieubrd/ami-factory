@@ -5,23 +5,25 @@ phases:
     runtime-versions:
       python: latest
     commands:
-      - yum install -y cmake make openscap-utils PyYAML python-jinja2
+      - yum install -y cmake make openscap-utils PyYAML python-jinja2 yum-utils
   pre_build:
     commands:
       - cd scap/
       - mkdir build
-      - cd build/ && cmake ../
+      - cd build/
+      - cmake ../
+      - make -j4 rhel8
+      - aws s3 cp ssg-rhel8-ds.xml s3://$BUCKET/$AMI_ID/$CODEBUILD_BUILD_NUMBER/ssg-rhel8-ds.xml
   build:
     commands:
-      - make -j4 rhel8
+      - cd ../../
+      - curl https://releases.hashicorp.com/packer/1.7.2/packer_1.7.2_linux_amd64.zip -o packer.zip
+      - unzip packer.zip
+      - ./packer init .
+      - ./packer build -var ami-id=$AMI_ID -var bucket=$BUCKET/$AMI_ID/$CODEBUILD_BUILD_NUMBER -var ds-name=ssg-rhel8-ds.xml -var instance-profile=$INSTANCE_PROFILE .
  
 artifacts:
   files:
-    - scap/build/*-ds.xml
+    - scap/build/guides/*.html
+  s3-prefix: $AMI_ID
   discard-paths: yes
-  secondary-artifacts:
-    guides:
-      files:
-        - scap/build/guides/*.html
-      name: guides
-      discard-paths: yes

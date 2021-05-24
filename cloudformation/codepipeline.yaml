@@ -1,13 +1,11 @@
 Parameters:
   BucketName:
     Type: String
+  AmiId:
+    Type: String
   CodeBuildProjectArn:
     Type: String
   CodeBuildProjectName:
-    Type: String
-  LambdaArn:
-    Type: String
-  LambdaName:
     Type: String
   GitHubRepository:
     Type: String
@@ -71,15 +69,6 @@ Resources:
                   - codebuild:BatchGetBuilds
                 Resource: !Ref CodeBuildProjectArn
 
-        - PolicyName: Lambda
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
-                Resource: !Ref LambdaArn
-
         - PolicyName: CodeStarConnection
           PolicyDocument:
             Version: '2012-10-17'
@@ -124,28 +113,14 @@ Resources:
                 Version: 1
               Configuration:
                 ProjectName: !Ref CodeBuildProjectName
+                EnvironmentVariables:
+                  Fn::Sub: '[{"name": "AMI_ID", "value": "${AmiId}"}, {"name": "BUCKET", "value": "${BucketName}"}, {"name": "INSTANCE_PROFILE", "value": "${InstanceProfile}"}]'
               InputArtifacts:
                 - Name: Source
               OutputArtifacts:
                 - Name: Build
               Name: CodeBuild
           Name: Build
-
-        - Actions:
-            - ActionTypeId:
-                Category: Invoke
-                Owner: AWS
-                Provider: Lambda
-                Version: 1
-              Configuration:
-                FunctionName: !Ref LambdaName
-                UserParameters: !Ref InstanceProfile
-              InputArtifacts:
-                - Name: Build
-              OutputArtifacts:
-                - Name: Report
-              Name: Lambda
-          Name: Compliance
   
 Outputs:
   RoleArn:

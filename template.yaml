@@ -26,8 +26,6 @@ Resources:
                 - ec2.amazonaws.com
             Action:
               - sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
       Policies:
         - PolicyName: S3
           PolicyDocument:
@@ -35,25 +33,19 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - 's3:GetObject'
-                  - 's3:PutObject'
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:HeadObject
                 Resource:
                   Fn::Sub:
                     - arn:aws:s3:::${Bucket}/*
                     - Bucket: !Ref BucketName
-
+  
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Roles:
         - !Ref EC2Role
-
-  LambdaStack:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: ./cloudformation/lambda.yaml
-      Parameters:
-        BucketName: !Ref BucketName
 
   CodeBuildStack:
     Type: AWS::CloudFormation::Stack
@@ -61,6 +53,7 @@ Resources:
       TemplateURL: ./cloudformation/codebuild.yaml
       Parameters:
         BucketName: !Ref BucketName
+        InstanceProfile: !Ref InstanceProfile
 
   CodePipelineStack:
     Type: AWS::CloudFormation::Stack
@@ -72,10 +65,7 @@ Resources:
           Fn::GetAtt: [CodeBuildStack, Outputs.CodeBuildProjectArn]
         CodeBuildProjectName:
           Fn::GetAtt: [CodeBuildStack, Outputs.CodeBuildProjectName]
-        LambdaArn:
-          Fn::GetAtt: [LambdaStack, Outputs.LambdaArn]
-        LambdaName:
-          Fn::GetAtt: [LambdaStack, Outputs.LambdaName]
         GitHubRepository: !Ref GitHubRepository
         BranchName: !Ref BranchName
         InstanceProfile: !Ref InstanceProfile
+        AmiId: !Ref AmiId
