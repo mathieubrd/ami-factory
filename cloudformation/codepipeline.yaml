@@ -9,6 +9,8 @@ Parameters:
     Type: String
   GitHubRepository:
     Type: String
+  ScapGitHubRepository:
+    Type: String
   BranchName:
     Type: String
   InstanceProfile:
@@ -103,6 +105,19 @@ Resources:
               BranchName: !Ref BranchName
               DetectChanges: false
             RunOrder: 1
+          - Name: ScapSource
+            ActionTypeId:
+              Category: Source
+              Owner: AWS
+              Version: 1
+              Provider: CodeStarSourceConnection
+            OutputArtifacts:
+              - Name: ScapSource
+            Configuration:
+              ConnectionArn: !Ref GitHubConnection
+              FullRepositoryId: !Ref ScapGitHubRepository
+              BranchName: master
+              DetectChanges: false
           Name: GitHub
 
         - Actions:
@@ -111,12 +126,14 @@ Resources:
                 Owner: AWS
                 Provider: CodeBuild
                 Version: 1
-              Configuration:
+              Configuration:  
+                PrimarySource: Source
                 ProjectName: !Ref CodeBuildProjectName
                 EnvironmentVariables:
                   Fn::Sub: '[{"name": "AMI_ID", "value": "${AmiId}"}, {"name": "BUCKET", "value": "${BucketName}"}, {"name": "INSTANCE_PROFILE", "value": "${InstanceProfile}"}]'
               InputArtifacts:
                 - Name: Source
+                - Name: ScapSource
               OutputArtifacts:
                 - Name: Build
               Name: CodeBuild

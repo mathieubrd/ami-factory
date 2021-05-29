@@ -36,5 +36,5 @@ jobs:
         with:
           name: ami-factory
           template: packaged-template.yaml
-          parameter-overrides: "GitHubRepository=capgemini-pnc/ami-factory,BranchName=${{ steps.extract_branch.outputs.branch }},BucketName=mathieubrochard.ami-factory,AmiId=ami-032e5b6af8a711f30"
+          parameter-overrides: "GitHubRepository=capgemini-pnc/ami-factory,ScapGitHubRepository=capgemini-pnc/ami-factory-scap,BranchName=${{ steps.extract_branch.outputs.branch }},BucketName=mathieubrochard.ami-factory,AmiId=ami-032e5b6af8a711f30"
           capabilities: CAPABILITY_NAMED_IAM

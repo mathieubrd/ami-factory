@@ -7,9 +7,10 @@ Parameters:
     Description: The AMI ID on which the compliance checks will run on (must be a RHEL-based AMI).
   GitHubRepository:
     Type: String
-    Description: |
-      The owner and name of the repository where source changes are to be detected.
-      Example: some-user/my-repo
+    Description: The name of the GitHub repository hosting the buildspec file.
+  ScapGitHubRepository:
+    Type: String
+    Description: The name of the GitHub repository hosting the SCAP content.
   BranchName:
     Type: String
   
@@ -66,6 +67,7 @@ Resources:
         CodeBuildProjectName:
           Fn::GetAtt: [CodeBuildStack, Outputs.CodeBuildProjectName]
         GitHubRepository: !Ref GitHubRepository
+        ScapGitHubRepository: !Ref ScapGitHubRepository
         BranchName: !Ref BranchName
         InstanceProfile: !Ref InstanceProfile
         AmiId: !Ref AmiId

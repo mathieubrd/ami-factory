@@ -8,7 +8,7 @@ phases:
       - yum install -y cmake make openscap-utils PyYAML python-jinja2 yum-utils
   pre_build:
     commands:
-      - cd scap/
+      - cd $CODEBUILD_SRC_DIR_ScapSource
       - mkdir build
       - cd build/
       - cmake ../
@@ -16,7 +16,7 @@ phases:
       - aws s3 cp ssg-rhel8-ds.xml s3://$BUCKET/$AMI_ID/$CODEBUILD_BUILD_NUMBER/ssg-rhel8-ds.xml
   build:
     commands:
-      - cd ../../
+      - cd $CODEBUILD_SRC_DIR
       - curl https://releases.hashicorp.com/packer/1.7.2/packer_1.7.2_linux_amd64.zip -o packer.zip
       - unzip packer.zip
       - ./packer init .
@@ -24,6 +24,6 @@ phases:
  
 artifacts:
   files:
-    - scap/build/guides/*.html
-  s3-prefix: $AMI_ID
+    - $CODEBUILD_SRC_DIR_ScapSource/build/guides/*.html
+  s3-prefix: $AMI_ID/$CODEBUILD_BUILD_NUMBER
   discard-paths: yes
