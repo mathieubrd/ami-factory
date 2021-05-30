@@ -1,7 +1,7 @@
 # AMI Factory
-A pipeline that creates hardened AWS AMIs based on compliance rules and remediation scripts.  
+A pipeline that creates hardened AWS AMIs based on compliance rules and remediation scripts written with SCAP.  
 This project provides a pipeline that automatically:
-- Compiles a set of compliance rules and remediation scripts.
+- Compiles a set of compliance rules and remediation scripts using SCAP.
 - Generates a human-readable hardening guide and uploads it to a S3 bucket.
 - Starts an user-defined AMI, executes the compliance checks, and remediates the AMI.
 - Generates an human-readable report of the compliance checks and the remediations and uploads them to a S3 bucket.
@@ -9,20 +9,23 @@ This project provides a pipeline that automatically:
 
 The pipeline is automatically deployed using CloudFormation.  
 It uses the following AWS services:
-- CloudFormation (deploys all the resources).
-- CodeBuild (builds the set of compliance rules, remediation scripts, and build the hardened AMI using Packer).
-- CodePipeline (provides the automation pipeline).
+- CloudFormation to deploys all the resources.
+- CodeBuild to builds the set of compliance rules, remediation scripts, and build the hardened AMI using Packer.
+- CodePipeline which provides the automation pipeline.
+- EC2 to build the AMI (run by Packer).
+
+The SCAP content is hosted in another GitHub repository called [ami-factory-scap](https://github.com/capgemini-pnc/ami-factory-scap).
 
 ## Deployment on AWS
-Before deploying the stack, a S3 bucket that will store the packaged template.
+Before deploying the stack, first create a S3 bucket that will store SCAP content and CloudFormation packaged templates.
 Package the project:
 ```
-aws cloudformation package --template-file template.yaml --s3-bucket <s3-bucket> --output-template-file packaged-template.yaml
+aws cloudformation package --template-file template.yaml --s3-bucket capgemini-pnc.ami-factory --output-template-file packaged-template.yaml
 ```
 
 Then, deploy the stack:
 ```
-aws cloudformation deploy --template-file packaged-template.yaml --stack-name <stack-name> --parameter-overrides GitHubRepository=capgemini-pnc/ami-factory BucketName=capgemini-pnc.ami-factory AmiId=ami-032e5b6af8a711f30 --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation deploy --template-file packaged-template.yaml --stack-name <stack-name> --parameter-overrides GitHubRepository=capgemini-pnc/ami-factory ScapGitHubRepository=capgemini-pnc/ami-factory-scap BucketName=capgemini-pnc.ami-factory AmiId=ami-032e5b6af8a711f30 --capabilities CAPABILITY_NAMED_IAM
 ```
 
 ### Stack parameters
@@ -50,11 +53,8 @@ CodeBuild does the following steps:
 - Launch Packer that builds the hardening AMI by using the previous built SCAP package.
 
 ### CodePipeline
-Defines the automation pipeline that is responsible of executing the compliance checks, remediation scripts, building the hardened AMI, etc.  
-It relies on AWS Lambda functions to provision EC2 instances, execute scripts, etc.
+Defines the automation pipeline that is responsible of retreiving the source code from GitHub, start CodeBuild and upload artifacts.
 
 ## Limitations and improvements
 - Only support for RHEL8.
-- The hardening AMI is not actually created (working on it).
-- The Lambda function could be replaced by HashiCorp Packer.
 - Based on a very old version of the SCAP Security Guide.
